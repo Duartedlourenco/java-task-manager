@@ -1,12 +1,12 @@
 package com.duarte.taskmanager;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
 
-    private static final int MAX_TASKS = 50;
-    private static final String[] list = new String[MAX_TASKS];
-    private static int count = 0;
+    private static final List<Task> tasks = new ArrayList<>();
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -22,12 +22,13 @@ public class Main {
                 case 1 -> create();
                 case 2 -> list();
                 case 3 -> search();
-                case 4 -> delete();
-                case 5 -> System.out.println("\nHave a nice day!");
-                default -> System.out.println("\nInvalid option. Please input an option between 1-5.");
+                case 4 -> complete();
+                case 5 -> delete();
+                case 6 -> System.out.println("\nHave a nice day!");
+                default -> System.out.println("\nInvalid option. Please input an option between 1-6.");
             }
             System.out.println();
-        } while (option != 5);
+        } while (option != 6);
 
         scanner.close();
     }
@@ -35,11 +36,12 @@ public class Main {
     private static void menu() {
         System.out.println("***** Java Task Manager *****");
         System.out.println("1. Create Task");
-        System.out.println("2. List Task");
+        System.out.println("2. List Tasks");
         System.out.println("3. Search Task");
-        System.out.println("4. Delete Task");
-        System.out.println("5. Exit");
-        System.out.print("Select an option (1-5): ");
+        System.out.println("4. Mark Task as Done");
+        System.out.println("5. Delete Task");
+        System.out.println("6. Exit");
+        System.out.print("Select an option (1-6): ");
     }
 
     private static int convert(String text) {
@@ -50,33 +52,39 @@ public class Main {
         }
     }
 
-    private static void create() {
-        if (count == MAX_TASKS) {
-            System.out.println("\nTask list is full.");
-            return;
+    private static int askTaskIndex(String prompt) {
+        System.out.print(prompt);
+        int number = convert(scanner.nextLine());
+
+        if (number < 1 || number > tasks.size()) {
+            System.out.println("Invalid task number.");
+            return -1;
         }
+        return number - 1;
+    }
 
+    private static void create() {
         System.out.print("\nTask description: ");
-        String task = scanner.nextLine().trim();
+        String description = scanner.nextLine().trim();
 
-        if (task.isEmpty()) {
+        if (description.isEmpty()) {
             System.out.println("Task cannot be empty.");
             return;
         }
 
-        list[count++] = task;
+        tasks.add(new Task(description));
         System.out.println("Task added!");
     }
 
     private static void list() {
-        if (count == 0) {
+        if (tasks.isEmpty()) {
             System.out.println("\nNo tasks yet.");
             return;
         }
 
         System.out.println("\n--- Your tasks ---");
-        for (int i = 0; i < count; i++) {
-            System.out.println((i + 1) + ". " + list[i]);
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println((i + 1) + ". " + tasks.get(i));
         }
     }
 
@@ -85,9 +93,10 @@ public class Main {
         String term = scanner.nextLine().trim().toLowerCase();
         boolean found = false;
 
-        for (int i = 0; i < count; i++) {
-            if (list[i].toLowerCase().contains(term)) {
-                System.out.println((i + 1) + ". " + list[i]);
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
+            if (task.getDescription().toLowerCase().contains(term)) {
+                System.out.println((i + 1) + ". " + task);
                 found = true;
             }
         }
@@ -97,28 +106,41 @@ public class Main {
         }
     }
 
+    private static void complete() {
+        if (tasks.isEmpty()) {
+            System.out.println("\nNo tasks to complete.");
+            return;
+        }
+
+        list();
+        int index = askTaskIndex("Number of the task to mark as done: ");
+        if (index == -1) {
+            return;
+        }
+
+        Task task = tasks.get(index);
+        if (task.isDone()) {
+            System.out.println("That task is already done.");
+        } else {
+            task.markDone();
+            System.out.println("Task completed!");
+        }
+    }
+
     private static void delete() {
-        if (count == 0) {
+        if (tasks.isEmpty()) {
             System.out.println("\nNo tasks to delete.");
             return;
         }
 
         list();
-        System.out.print("Number of the task to delete: ");
-        int number = convert(scanner.nextLine());
-
-        if (number < 1 || number > count) {
-            System.out.println("Invalid task number.");
+        int index = askTaskIndex("Number of the task to delete: ");
+        if (index == -1) {
             return;
         }
 
-        for (int i = number - 1; i < count - 1; i++) {
-            list[i] = list[i + 1];
-        }
-        list[--count] = null;
-
+        tasks.remove(index);
         System.out.println("Task deleted!");
     }
 }
-
 
